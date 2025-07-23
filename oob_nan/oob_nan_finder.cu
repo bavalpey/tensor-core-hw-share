@@ -12,6 +12,9 @@ __global__ void kernel(__half *a, __half *b, __half *c, __half *d)
     short z = b[gid];
     short w = c[gid];
     short x;
+    if (threadIdx.x == 0) {
+        printf("Thread %d: a = %#06hx, b = %#06hx, c = %#04hx\n", threadIdx.x, y, z, w);
+    }
     asm volatile("{fma.rn.oob.f16 %0, %1, %2, %3;}" : "=h"(x) : "h"(y), "h"(z), "h"(w));
     memcpy(&d[gid], &x, sizeof(short));
 }
@@ -39,6 +42,8 @@ int main()
             h_C[i] = (__half)(value | i);
             // also check signed nans
             h_C[i + 1024] = (__half)(value | 0x8000 | i);
+        } else {
+            h_C[i] = __float2half(1.0f);
         }
     }
 
