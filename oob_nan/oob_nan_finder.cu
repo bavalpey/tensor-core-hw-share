@@ -5,18 +5,17 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-__global__ void kernel(__half *a, __half *b, __half *c, __half *d)
+__global__ void kernel(void *a, void *b, void *c, void *d)
 {
     auto gid = blockIdx.x * blockDim.x + threadIdx.x;
-    short y = a[gid];
-    short z = b[gid];
-    short w = c[gid];
-    short x;
+    uint16_t y = ((uint16_t *) a)[gid];
+    uint16_t z = ((uint16_t *) b)[gid];
+    uint16_t w = ((uint16_t *) c)[gid];
+    uint16_t x;
     if (threadIdx.x == 0) {
         printf("Thread %d: a = %#06hx, b = %#06hx, c = %#04hx\n", threadIdx.x, y, z, w);
     }
-    asm volatile("{fma.rn.oob.f16 %0, %1, %2, %3;}" : "=h"(x) : "h"(y), "h"(z), "h"(w));
-    memcpy(&d[gid], &x, sizeof(short));
+    asm volatile("{fma.rn.oob.f16 %0, %1, %2, %3;}" : "=h"(((uint16_t *) d)[gid]) : "h"(y), "h"(z), "h"(w));
 }
 
 int main()
@@ -54,12 +53,14 @@ int main()
     thrust::copy(h_B.begin(), h_B.end(), d_B.begin());
     thrust::copy(h_C.begin(), h_C.end(), d_C.begin());
     thrust::device_vector<__half> d_D(2048);
+    cudaDeviceSynchronize();
     kernel<<<2, 1024>>>(thrust::raw_pointer_cast(d_A.data()),
                         thrust::raw_pointer_cast(d_B.data()),
                         thrust::raw_pointer_cast(d_C.data()),
                         thrust::raw_pointer_cast(d_D.data()));
 
     thrust::copy(d_D.begin(), d_D.end(), h_D.begin());
+    cudaDeviceSynchronize();
 
     // Now, go through each element in h_D and check if the result was 0 instead of NaN.
     for (uint16_t i = 0; i < h_D.size(); ++i)
