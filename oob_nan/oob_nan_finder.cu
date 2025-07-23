@@ -42,11 +42,14 @@ int main()
         }
     }
 
-    thrust::device_vector<__half> d_A = h_A;
-    thrust::device_vector<__half> d_B = h_B;
-    thrust::device_vector<__half> d_C = h_C;
-    thrust::device_vector<__half> d_D(4096);
-    kernel<<<4, 1024>>>(thrust::raw_pointer_cast(d_A.data()),
+    thrust::device_vector<__half> d_A(2048);
+    thrust::device_vector<__half> d_B(2048);
+    thrust::device_vector<__half> d_C(2048);
+    thrust::copy(h_A.begin(), h_A.end(), d_A.begin());
+    thrust::copy(h_B.begin(), h_B.end(), d_B.begin());
+    thrust::copy(h_C.begin(), h_C.end(), d_C.begin());
+    thrust::device_vector<__half> d_D(2048);
+    kernel<<<2, 1024>>>(thrust::raw_pointer_cast(d_A.data()),
                         thrust::raw_pointer_cast(d_B.data()),
                         thrust::raw_pointer_cast(d_C.data()),
                         thrust::raw_pointer_cast(d_D.data()));
@@ -58,7 +61,7 @@ int main()
     {
         if (((uint16_t)h_D[i]) == 0)
         {
-            printf("OOB nan is: %#06hx\n", (uint16_t)h_C[i]);
+            printf("OOB-Nan is: %#06hx\n", (uint16_t)h_C[i]);
         }
         else
         {
