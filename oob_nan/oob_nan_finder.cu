@@ -8,14 +8,14 @@
 __global__ void kernel(void *a, void *b, void *c, void *d)
 {
     auto gid = blockIdx.x * blockDim.x + threadIdx.x;
-    uint16_t y = ((uint16_t *) a)[gid];
-    uint16_t z = ((uint16_t *) b)[gid];
-    uint16_t w = ((uint16_t *) c)[gid];
-    uint16_t x;
-    if (threadIdx.x == 0) {
-        printf("Thread %d: a = %#06hx, b = %#06hx, c = %#04hx\n", threadIdx.x, y, z, w);
+    uint16_t y = ((uint16_t *)a)[gid];
+    uint16_t z = ((uint16_t *)b)[gid];
+    uint16_t w = ((uint16_t *)c)[gid];
+    asm volatile("{fma.rn.oob.f16 %0, %1, %2, %3;}" : "=h"(((uint16_t *)d)[gid]) : "h"(y), "h"(z), "h"(w));
+    if (threadIdx.x == 1)
+    {
+        printf("Thread %d: a = %#06hx, b = %#06hx, c = %#06hx, d = %#06hx\n", threadIdx.x, y, z, w, ((uint16_t *)d)[gid]);
     }
-    asm volatile("{fma.rn.oob.f16 %0, %1, %2, %3;}" : "=h"(((uint16_t *) d)[gid]) : "h"(y), "h"(z), "h"(w));
 }
 
 int main()
@@ -41,7 +41,9 @@ int main()
             h_C[i] = (__half)(value | i);
             // also check signed nans
             h_C[i + 1024] = (__half)(value | 0x8000 | i);
-        } else {
+        }
+        else
+        {
             h_C[i] = __float2half(1.0f);
         }
     }
@@ -68,10 +70,6 @@ int main()
         if (((uint16_t)h_D[i]) == 0)
         {
             printf("OOB-Nan is: %#06hx\n", (uint16_t)h_C[i]);
-        }
-        else
-        {
-            printf("Non-OOB NaN: %#06hx\n", (uint16_t)h_D[i]);
         }
     }
 
