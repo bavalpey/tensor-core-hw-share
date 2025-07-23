@@ -51,9 +51,11 @@ int main()
     // Now, go through each element in h_D and check if the result was 0 instead of NaN.
     for (uint16_t i = 0; i < h_D.size(); ++i)
     {
-        if ((((uint16_t )h_D[i]) & 0) == 0)
+        if (((uint16_t )h_D[i]) == 0)
         {
-            printf("OOB nan is: %#010hx\n", (uint16_t)h_C[i]);
+            printf("OOB nan is: %#06hx\n", (uint16_t)h_C[i]);
+        } else {
+            printf("Non-OOB NaN: %#06hx\n", (uint16_t)h_D[i]);
         }
     }
 
