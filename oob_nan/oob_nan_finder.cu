@@ -21,16 +21,16 @@ __global__ void kernel(void *a, void *b, void *c, void *d)
 int main()
 {
     const uint16_t value = 0x7c00; // infinity in half-precision.
-    thrust::host_vector<__half> h_A(2048);
-    thrust::host_vector<__half> h_B(2048);
-    thrust::host_vector<__half> h_C(2048);
-    thrust::host_vector<__half> h_D(2048);
+    thrust::host_vector<uint16_t> h_A(2048);
+    thrust::host_vector<uint16_t> h_B(2048);
+    thrust::host_vector<uint16_t> h_C(2048);
+    thrust::host_vector<uint16_t> h_D(2048);
 
     for (uint16_t i = 0; i < h_A.size(); ++i)
     {
-        h_A[i] = __float2half(1.0f);
-        h_B[i] = __float2half(1.0f);
-        h_C[i] = __float2half(1.0f);
+        h_A[i] = ((uint16_t) __float2half(1.0f));
+        h_B[i] = ((uint16_t) __float2half(1.0f));
+        h_C[i] = ((uint16_t) __float2half(1.0f));
     }
 
     // Make C the NaN representation.
@@ -38,13 +38,14 @@ int main()
     {
         if (i != 0)
         {
-            h_C[i] = (__half)(value | i);
-            // also check signed nans
-            h_C[i + 1024] = (__half)(value | 0x8000 | i);
+            h_C[i] = value | i;
+            // Second block checks signed nans.
+            h_C[i + 1024] = (value | 0x8000 | i);
         }
         else
         {
-            h_C[i] = __float2half(1.0f);
+            h_C[i] = (uint16_t) __float2half(1.0f);
+            h_C[i + 1024] = (uint16_t) __float2half(1.0f);
         }
     }
 
