@@ -9,8 +9,8 @@ __global__ void kernel(void *a, void *b, void *c, void *d)
 {
     auto gid = blockIdx.x * blockDim.x + threadIdx.x;
     uint16_t y = ((uint16_t *)a)[gid];
-    uint16_t z = ((uint16_t *)b)[gid];
-    uint16_t w = ((uint16_t *)c)[gid];
+    uint16_t z = ((uint16_t *)c)[gid];
+    uint16_t w = ((uint16_t *)b)[gid];
     asm volatile("{fma.rn.oob.f16 %0, %1, %2, %3;}" : "=h"(((uint16_t *)d)[gid]) : "h"(y), "h"(z), "h"(w));
     if (threadIdx.x == 1)
     {
@@ -74,6 +74,8 @@ int main()
         if (((uint16_t)h_D[i]) == 0)
         {
             printf("OOB-Nan is: %#06hx\n", (uint16_t)h_C[i]);
+        } else {
+            printf("Result was: %#06hx\n", (uint16_t)h_D[i]);
         }
     }
 
