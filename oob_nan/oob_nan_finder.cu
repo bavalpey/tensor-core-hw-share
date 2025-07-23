@@ -38,7 +38,10 @@ int main()
     {
         if (i != 0)
         {
-            h_C[i] = value | i;
+            h_C[i] = 0x7c00u | i;
+            if (i == 1) {
+                printf("Setting h_C[%d] to NaN: %#06hx\n", i, h_C[i]);
+            }
             // Second block checks signed nans.
             h_C[i + 1024] = (value | 0x8000 | i);
         }
@@ -49,13 +52,13 @@ int main()
         }
     }
 
-    thrust::device_vector<__half> d_A(2048);
-    thrust::device_vector<__half> d_B(2048);
-    thrust::device_vector<__half> d_C(2048);
+    thrust::device_vector<uint16_t> d_A(2048);
+    thrust::device_vector<uint16_t> d_B(2048);
+    thrust::device_vector<uint16_t> d_C(2048);
     thrust::copy(h_A.begin(), h_A.end(), d_A.begin());
     thrust::copy(h_B.begin(), h_B.end(), d_B.begin());
     thrust::copy(h_C.begin(), h_C.end(), d_C.begin());
-    thrust::device_vector<__half> d_D(2048);
+    thrust::device_vector<uint16_t> d_D(2048);
     cudaDeviceSynchronize();
     kernel<<<2, 1024>>>(thrust::raw_pointer_cast(d_A.data()),
                         thrust::raw_pointer_cast(d_B.data()),
